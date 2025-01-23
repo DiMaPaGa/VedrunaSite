@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Image, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';  // Importamos las funciones necesarias de Firebase
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';  // Agregamos onAuthStateChanged
 import { auth } from '../firebaseConfig';  // Importamos la configuración de Firebase
 
 const LoginFirebaseScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // Verificar si el usuario ya está autenticado
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigation.navigate('Home');  // Redirige a Home si ya está autenticado
+      }
+    });
+
+    return () => unsubscribe();  // Limpiar el listener cuando el componente se desmonte
+  }, [navigation]);  // Dependencia de `navigation` para evitar re-renderizados infinitos
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -13,12 +24,11 @@ const LoginFirebaseScreen = ({ navigation }) => {
       return;
     }
 
-    // Usamos Firebase Authentication para iniciar sesión
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
         console.log('Login exitoso: ', user);
-        navigation.navigate('Home'); // Redirige a la pantalla Home después de un login exitoso
+        navigation.navigate('Home');
       })
       .catch((error) => {
         const errorCode = error.code;
@@ -61,12 +71,9 @@ const LoginFirebaseScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.button,
-              (!email || !password) && styles.buttonDisabled, // Botón deshabilitado si falta algún campo
-            ]}
+            style={[styles.button, (!email || !password) && styles.buttonDisabled]}
             onPress={handleLogin}
-            disabled={!email || !password} // Evitar que el botón sea presionado si falta información
+            disabled={!email || !password}
           >
             <Text style={styles.buttonText}>Log in</Text>
           </TouchableOpacity>
@@ -138,7 +145,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonDisabled: {
-    backgroundColor: '#6C6C6C', // Cambia el color del botón deshabilitado
+    backgroundColor: '#6C6C6C',
   },
   buttonText: {
     fontSize: 16,
@@ -170,6 +177,4 @@ const styles = StyleSheet.create({
 });
 
 export default LoginFirebaseScreen;
-
-
 
