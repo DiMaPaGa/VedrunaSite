@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image, Text, View, StyleSheet } from 'react-native';
 import PublicationScreen from './PublicationScreen';
 import SettingsScreen from './SettingsScreen';
+import AddPublicationScreen from './AddPublicationScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,19 +18,14 @@ const CustomTabBarIcon = ({ focused, activeIcon, inactiveIcon, label }) => (
       numberOfLines={1}
       ellipsizeMode="tail"
     >
-      {label || ''}
+      {label || 'sin etiqueta'}
     </Text>
   </View>
 );
 
-const HomeScreen = ({ navigation }) => {
-  const handleLogout = () => {
-    // Aquí es donde puedes realizar el logout y navegar a la pantalla de login
-    console.log('Logout ejecutado');
-    navigation.navigate('LoginFirebaseScreen');
-  };
+const HomeScreen = () => {
 
-  return (
+  return(
     <Tab.Navigator
       screenOptions={{
         tabBarShowLabel: false,
@@ -52,26 +48,20 @@ const HomeScreen = ({ navigation }) => {
         }}
       />
       
-        <Tab.Screen
-    name="Salir"
-    component={() => null} // Un componente vacío
-    options={{
-      tabBarIcon: ({ focused }) => (
-        <CustomTabBarIcon
-          focused={focused}
-          activeIcon={require('../../assets/add.png')}
-          inactiveIcon={require('../../assets/addgris.png')}
-          label="Salir"
-        />
-      ),
-    }}
-    listeners={{
-      tabPress: (e) => {
-        e.preventDefault(); // Prevenir la navegación automática
-        handleLogout(); // Ejecutar el logout
-      },
-    }}
-  />
+      <Tab.Screen
+        name="Add"
+        component={AddPublicationScreen} 
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <CustomTabBarIcon
+              focused={focused}
+              activeIcon={require('../../assets/add.png')}
+              inactiveIcon={require('../../assets/addgris.png')}
+              label="Add"
+            />
+          ),
+        }} 
+      />
 
       <Tab.Screen
         name="Ajustes"
@@ -99,19 +89,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderTopWidth: 0, // Elimina el borde superior del navbar si lo hubiera
-    paddingTop: 10, // Ajuste de espacio arriba para centrar el contenido
+    borderTopWidth: 0, 
+    paddingTop: 10, 
   },
   iconContainer: {
-    flexDirection: 'column', // Coloca el icono y el texto en columna
-    justifyContent: 'center', // Centra verticalmente
-    alignItems: 'center', // Centra horizontalmente
-    height: 50, // Altura consistente para el contenedor
+    flexDirection: 'column', 
+    justifyContent: 'center',
+    alignItems: 'center', 
+    height: 50,
   },
   icon: {
     width: 24,
     height: 24,
-    marginBottom: 2, // Espacio entre el icono y el texto
+    marginBottom: 2, 
   },
   iconLabel: {
     fontFamily: 'Asap Condensed',
@@ -120,7 +110,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 13,
     textAlign: 'center',
-    width: 60, // Ancho fijo para mantener el texto alineado
+    width: 60, 
   },
   iconLabelActive: {
     color: '#9FC63B',

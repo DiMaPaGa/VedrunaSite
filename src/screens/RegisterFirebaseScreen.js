@@ -13,8 +13,8 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { createUserWithEmailAndPassword } from 'firebase/auth'; // Importamos las funciones necesarias de Firebase
-import { auth } from '../firebaseConfig'; // Importamos auth configurado
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig'; 
 
 const RegisterFirebaseScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -75,7 +75,34 @@ const RegisterFirebaseScreen = ({ navigation }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       console.log('Usuario registrado: ', user);
-      navigation.navigate('Home');
+
+      
+      const usuarioData = {
+        nick: nick,
+        user_id: user.uid,  
+        nombre: firstName,
+        apellidos: `${lastName} ${secondLastName}`,
+        profile_picture: '', 
+      };
+
+       
+       const response = await fetch('http://192.168.1.168:8080/proyecto01/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(usuarioData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Usuario guardado en MongoDB:', data);
+        navigation.navigate('Home');  
+      } else {
+        const errorData = await response.json();
+        console.error('Error al guardar usuario:', errorData);
+        Alert.alert('Error', 'Hubo un problema al guardar los datos del usuario.');
+      }
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
@@ -214,7 +241,7 @@ const RegisterFirebaseScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  // Los estilos se mantienen igual
+  
   container: {
     flexGrow: 1,
     backgroundColor: '#23272A',

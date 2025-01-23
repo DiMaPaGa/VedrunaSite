@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Image, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';  // Agregamos onAuthStateChanged
-import { auth } from '../firebaseConfig';  // Importamos la configuración de Firebase
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'; 
+import { auth } from '../firebaseConfig';  
 
 const LoginFirebaseScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // Verificar si el usuario ya está autenticado
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        navigation.navigate('Home');  // Redirige a Home si ya está autenticado
+        navigation.navigate('Home');  
       }
     });
 
-    return () => unsubscribe();  // Limpiar el listener cuando el componente se desmonte
-  }, [navigation]);  // Dependencia de `navigation` para evitar re-renderizados infinitos
+    return () => unsubscribe(); 
+  }, [navigation]);  
 
   const handleLogin = () => {
     if (!email || !password) {
