@@ -3,20 +3,31 @@ import { View, TextInput, Text, TouchableOpacity, StyleSheet, Image, Alert, Keyb
 import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'; 
 import { auth } from '../firebaseConfig';  
 
+
 const LoginFirebaseScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        navigation.navigate('Home');  
-      }
-    });
+  const [initializing, setInitializing] = useState(true);
 
-    return () => unsubscribe(); 
-  }, [navigation]);  
+ useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (initializing) {
+      setInitializing(true);
+      return;
+    }
+
+    if (user) {
+      console.log('Usuario autenticado detectado.');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
+    }
+  });
+
+  return () => unsubscribe();
+}, [navigation, initializing]); 
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -25,18 +36,19 @@ const LoginFirebaseScreen = ({ navigation }) => {
     }
 
     signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log('Login exitoso: ', user);
-        navigation.navigate('Home');
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.error('Error de autenticación: ', errorCode, errorMessage);
-        Alert.alert('Error de inicio de sesión', 'Correo o contraseña incorrectos.');
+    .then((userCredential) => {
+      const user = userCredential.user;
+      console.log('Login exitoso: ', user);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
       });
-  };
+    })
+    .catch((error) => {
+      console.error('Error de autenticación: ', error.code, error.message);
+      Alert.alert('Error de inicio de sesión', 'Correo o contraseña incorrectos.');
+    });
+};
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
