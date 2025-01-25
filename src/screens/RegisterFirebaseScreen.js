@@ -97,7 +97,7 @@ const RegisterFirebaseScreen = ({ navigation }) => {
       if (response.ok) {
         const data = await response.json();
         console.log('Usuario guardado en MongoDB:', data);
-        navigation.navigate('Home');  
+        navigation.navigate('LoginFirebaseScreen');  
       } else {
         const errorData = await response.json();
         console.error('Error al guardar usuario:', errorData);

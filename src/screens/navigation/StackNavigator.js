@@ -6,6 +6,7 @@ import HomeScreen from '../HomeScreen';
 
 const Stack = createNativeStackNavigator();
 
+
 const StackNavigator = () => {
   return (
     <Stack.Navigator initialRouteName="LoginFirebaseScreen">

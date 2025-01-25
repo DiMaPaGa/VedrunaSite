@@ -1,54 +1,82 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Image, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'; 
-import { auth } from '../firebaseConfig';  
-
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth'; 
+import { auth } from '../firebaseConfig';
 
 const LoginFirebaseScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userNick, setUserNick] = useState(''); 
+  const [userId, setUserId] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const [initializing, setInitializing] = useState(true);
+  // Detectar cambios en el estado de autenticación
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log('Usuario autenticado detectado.');
+        setUserId(user.uid);  // Guardamos el userId cuando está autenticado
+      } else {
+        setUserId('');  // Resetear si el usuario no está autenticado
+        console.log('Usuario no autenticado');
+      }
+    });
 
- useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (initializing) {
-      setInitializing(true);
-      return;
+    // Desuscribir cuando el componente se desmonte
+    return () => unsubscribe();
+  }, []);
+
+  // Hacer la llamada para obtener los datos del usuario una vez que el userId esté disponible
+  useEffect(() => {
+    if (userId) {
+      fetchUserData(userId);
     }
+  }, [userId]);
+  const fetchUserData = async (userId) => {
+    try {
+      const response = await fetch(`http://192.168.1.168:8080/proyecto01/users/${userId}`);
+      const data = await response.json();
 
-    if (user) {
-      console.log('Usuario autenticado detectado.');
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      });
+      if (data) {
+        setUserNick(data.nick); // Asignamos el nick del usuario
+        console.log('Nick del usuario:', data.nick);
+
+        // Después de obtener los datos del usuario, navega a Home
+        navigation.replace('Home', { userNick: data.nick, userId: userId });
+      } else {
+        console.error('Usuario no encontrado');
+      }
+    } catch (error) {
+      console.error('Error al obtener los datos del usuario:', error);
     }
-  });
-
-  return () => unsubscribe();
-}, [navigation, initializing]); 
+  };
 
   const handleLogin = () => {
     if (!email || !password) {
       Alert.alert('Campos incompletos', 'Por favor, complete ambos campos antes de iniciar sesión.');
       return;
     }
+    setLoading(true);
 
     signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      const user = userCredential.user;
-      console.log('Login exitoso: ', user);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log('Login exitoso: ', user);
+        setUserId(user.uid); // Esto va a activar el uso de fetchUserData
+      })
+      .catch((error) => {
+        console.error('Error de autenticación: ', error.code, error.message);
+        Alert.alert('Error de inicio de sesión', 'Correo o contraseña incorrectos.');
+      })
+      .finally(() => {
+        setLoading(false); // Detener la carga una vez que se haya completado el proceso
       });
-    })
-    .catch((error) => {
-      console.error('Error de autenticación: ', error.code, error.message);
-      Alert.alert('Error de inicio de sesión', 'Correo o contraseña incorrectos.');
-    });
-};
+  };
+  
+
+  if (loading) {
+    return <View><Text>Loading...</Text></View>;
+  }
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>

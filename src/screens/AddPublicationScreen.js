@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Image, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
-const AddPublicationScreen = () => {
+const AddPublicationScreen = ({ route }) => {
+
+  const { userNick } = route.params || {};
+  console.log('userNick en PublicationScreen: ', userNick)
+
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const userId = '123456'; // Reemplaza con el UID del usuario autenticado
+  
 
   // Seleccionar imagen desde la galería
   const handleImagePick = async () => {
@@ -23,12 +27,11 @@ const AddPublicationScreen = () => {
     }
   };
 
-  
   const uploadImageToCloudinary = async (imageUri) => {
     const formData = new FormData();
     formData.append('file', { uri: imageUri, name: 'image.jpg', type: 'image/jpeg' });
-    formData.append('upload_preset', 'ml_default'); 
-    formData.append('cloud_name', 'dpqj4thfg'); 
+    formData.append('upload_preset', 'ml_default');
+    formData.append('cloud_name', 'dpqj4thfg');
 
     try {
       const response = await fetch('https://api.cloudinary.com/v1_1/dpqj4thfg/image/upload', {
@@ -37,14 +40,13 @@ const AddPublicationScreen = () => {
       });
       const data = await response.json();
       console.log('Respuesta de Cloudinary:', data);
-      return data.secure_url; 
+      return data.secure_url;
     } catch (error) {
       console.error('Error al subir la imagen:', error);
       throw new Error('Error al subir la imagen');
     }
   };
 
-  // Crear publicación
   const handleCreatePublication = async () => {
     if (!title || !comment) {
       Alert.alert('Error', 'Por favor, completa todos los campos.');
@@ -62,7 +64,7 @@ const AddPublicationScreen = () => {
       }
 
       const publicationData = {
-        user_id: userId,
+        user_id: userNick,
         titulo: title,
         comentario: comment,
         image_url: imageUrl,
@@ -91,61 +93,109 @@ const AddPublicationScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>PUBLICACIÓN</Text>
+      <Image source={require('../../assets/addpub.png')} style={styles.imageIcon} />
+
       <Text style={styles.label}>Título</Text>
       <TextInput
         style={styles.input}
-        placeholder="Título de la publicación"
+        placeholder="Máx. 40 Caracteres"
+        placeholderTextColor="#DFDFDF"
         value={title}
-        onChangeText={setTitle}
+        onChangeText={(text) => text.length <= 40 && setTitle(text)}
       />
-      <Text style={styles.label}>Comentario</Text>
+
+      <Text style={styles.label}>Descripción</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
-        placeholder="Escribe tu comentario"
+        placeholder="Máx. 250 Caracteres"
+        placeholderTextColor="#DFDFDF"
         value={comment}
-        onChangeText={setComment}
+        onChangeText={(text) => text.length <= 250 && setComment(text)}
         multiline
       />
-      <Button title="Seleccionar Imagen" onPress={handleImagePick} />
+
+      <TouchableOpacity style={styles.button} onPress={handleImagePick}>
+        <Text style={styles.buttonText}>IMAGEN</Text>
+      </TouchableOpacity>
+
       {selectedImage && (
         <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
       )}
-      <Button
-        title={isLoading ? 'Creando...' : 'Crear Publicación'}
+
+      <TouchableOpacity
+        style={[styles.button, isLoading && styles.buttonDisabled]}
         onPress={handleCreatePublication}
         disabled={isLoading}
-      />
-    </View>
+      >
+        <Text style={styles.buttonText}>{isLoading ? 'Creando...' : 'PUBLICAR'}</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
+    backgroundColor: '#23272A',
     padding: 20,
+    alignItems: 'center', // Centra el contenido horizontalmente
+  },
+  header: {
+    fontFamily: 'Rajdhani_600SemiBold',
+    color: '#9FC63B',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  imageIcon: {
+    width: 120, // Más compacto
+    height: 120, // Más compacto
+    marginBottom: 20,
   },
   label: {
+    fontFamily: 'Rajdhani_400Regular',
+    color: '#9FC63B',
     fontSize: 16,
     marginBottom: 5,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
+    backgroundColor: '#333',
+    color: '#FFFFFF',
     borderRadius: 5,
     padding: 10,
-    marginBottom: 10,
+    marginBottom: 15,
+    width: '100%', // Ocupa todo el ancho disponible
   },
   textArea: {
-    height: 100,
+    height: 80, // Más compacto
+  },
+  button: {
+    backgroundColor: '#23272A',
+    borderColor: '#9FC63B',
+    borderWidth: 2,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 10,
+    width: '50%',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  buttonDisabled: {
+    backgroundColor: '#555',
   },
   imagePreview: {
     width: '100%',
-    height: 200,
+    height: 150, // Más compacto
     marginVertical: 10,
+    borderRadius: 5,
   },
 });
 
 export default AddPublicationScreen;
-
-

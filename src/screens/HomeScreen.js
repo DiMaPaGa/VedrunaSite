@@ -23,7 +23,8 @@ const CustomTabBarIcon = ({ focused, activeIcon, inactiveIcon, label }) => (
   </View>
 );
 
-const HomeScreen = () => {
+const HomeScreen = ({route}) => {
+  const { userNick, UserId } = route.params;
 
   return(
     <Tab.Navigator
@@ -36,6 +37,7 @@ const HomeScreen = () => {
       <Tab.Screen
         name="Publicaciones"
         component={PublicationScreen}
+        initialParams={{ userNick }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
@@ -50,12 +52,13 @@ const HomeScreen = () => {
       
       <Tab.Screen
         name="Add"
-        component={AddPublicationScreen} 
+        component={AddPublicationScreen}
+        initialParams={{ userNick }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
               focused={focused}
-              activeIcon={require('../../assets/add.png')}
+              activeIcon={require('../../assets/addg.png')}
               inactiveIcon={require('../../assets/addgris.png')}
               label="Add"
             />
