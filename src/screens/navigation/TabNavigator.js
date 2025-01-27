@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import HomeScreen from '../HomeScreen'; // Asegúrate de que la ruta esté correcta
+import HomeScreen from '../HomeScreen'; 
 
 const Tab = createBottomTabNavigator();
 
