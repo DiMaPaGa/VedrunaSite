@@ -1,32 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Image, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';  // Importamos las funciones necesarias de Firebase
-import { auth } from '../firebaseConfig';  // Importamos la configuración de Firebase
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth'; 
+import { auth } from '../firebaseConfig';
 
 const LoginFirebaseScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userNick, setUserNick] = useState(''); 
+  const [userId, setUserId] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        console.log('Usuario autenticado detectado.');
+        setUserId(user.uid);
+      } else {
+        setUserId('');
+        console.log('Usuario no autenticado');
+      }
+    });
+
+  
+    return () => unsubscribe();
+  }, []);
+
+  
+  useEffect(() => {
+    if (userId) {
+      fetchUserData(userId);
+    }
+  }, [userId]);
+  const fetchUserData = async (userId) => {
+    try {
+      const response = await fetch(`http://192.168.1.168:8080/proyecto01/users/${userId}`);
+      const data = await response.json();
+
+      if (data) {
+        setUserNick(data.nick);
+        console.log('Nick del usuario:', data.nick);
+
+      
+        navigation.replace('Home', { userNick: data.nick, userId: userId });
+      } else {
+        console.error('Usuario no encontrado');
+      }
+    } catch (error) {
+      console.error('Error al obtener los datos del usuario:', error);
+    }
+  };
 
   const handleLogin = () => {
     if (!email || !password) {
       Alert.alert('Campos incompletos', 'Por favor, complete ambos campos antes de iniciar sesión.');
       return;
     }
+    setLoading(true);
 
-    // Usamos Firebase Authentication para iniciar sesión
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
         console.log('Login exitoso: ', user);
-        navigation.navigate('Home'); // Redirige a la pantalla Home después de un login exitoso
+        setUserId(user.uid);
       })
       .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        console.error('Error de autenticación: ', errorCode, errorMessage);
+        console.error('Error de autenticación: ', error.code, error.message);
         Alert.alert('Error de inicio de sesión', 'Correo o contraseña incorrectos.');
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
+  
+
+  if (loading) {
+    return <View><Text>Loading...</Text></View>;
+  }
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
@@ -61,12 +111,9 @@ const LoginFirebaseScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.button,
-              (!email || !password) && styles.buttonDisabled, // Botón deshabilitado si falta algún campo
-            ]}
+            style={[styles.button, (!email || !password) && styles.buttonDisabled]}
             onPress={handleLogin}
-            disabled={!email || !password} // Evitar que el botón sea presionado si falta información
+            disabled={!email || !password}
           >
             <Text style={styles.buttonText}>Log in</Text>
           </TouchableOpacity>
@@ -138,7 +185,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   buttonDisabled: {
-    backgroundColor: '#6C6C6C', // Cambia el color del botón deshabilitado
+    backgroundColor: '#6C6C6C',
   },
   buttonText: {
     fontSize: 16,
@@ -170,6 +217,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginFirebaseScreen;
-
-
-

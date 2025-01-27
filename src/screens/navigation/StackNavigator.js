@@ -1,10 +1,11 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LoginFirebaseScreen from '../LoginFirebaseScreen';  // Ajusta la ruta si es necesario
-import RegisterFirebaseScreen from '../RegisterFirebaseScreen'; // Ajusta la ruta si es necesario
-import HomeScreen from '../HomeScreen'; // Asegúrate de importar también HomeScreen
+import LoginFirebaseScreen from '../LoginFirebaseScreen';  
+import RegisterFirebaseScreen from '../RegisterFirebaseScreen'; 
+import HomeScreen from '../HomeScreen'; 
 
 const Stack = createNativeStackNavigator();
+
 
 const StackNavigator = () => {
   return (
