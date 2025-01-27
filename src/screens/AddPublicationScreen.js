@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: '#23272A',
     padding: 20,
-    alignItems: 'center', // Centra el contenido horizontalmente
+    alignItems: 'center',
   },
   header: {
     fontFamily: 'Rajdhani_600SemiBold',
@@ -151,8 +151,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   imageIcon: {
-    width: 120, // Más compacto
-    height: 120, // Más compacto
+    width: 120,
+    height: 120,
     marginBottom: 20,
   },
   label: {
@@ -167,10 +167,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 15,
-    width: '100%', // Ocupa todo el ancho disponible
+    width: '100%', 
   },
   textArea: {
-    height: 80, // Más compacto
+    height: 80, 
   },
   button: {
     backgroundColor: '#23272A',
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   },
   imagePreview: {
     width: '100%',
-    height: 150, // Más compacto
+    height: 150,
     marginVertical: 10,
     borderRadius: 5,
   },

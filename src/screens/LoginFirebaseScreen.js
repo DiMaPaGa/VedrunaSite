@@ -10,23 +10,23 @@ const LoginFirebaseScreen = ({ navigation }) => {
   const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Detectar cambios en el estado de autenticación
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         console.log('Usuario autenticado detectado.');
-        setUserId(user.uid);  // Guardamos el userId cuando está autenticado
+        setUserId(user.uid);
       } else {
-        setUserId('');  // Resetear si el usuario no está autenticado
+        setUserId('');
         console.log('Usuario no autenticado');
       }
     });
 
-    // Desuscribir cuando el componente se desmonte
+  
     return () => unsubscribe();
   }, []);
 
-  // Hacer la llamada para obtener los datos del usuario una vez que el userId esté disponible
+  
   useEffect(() => {
     if (userId) {
       fetchUserData(userId);
@@ -38,10 +38,10 @@ const LoginFirebaseScreen = ({ navigation }) => {
       const data = await response.json();
 
       if (data) {
-        setUserNick(data.nick); // Asignamos el nick del usuario
+        setUserNick(data.nick);
         console.log('Nick del usuario:', data.nick);
 
-        // Después de obtener los datos del usuario, navega a Home
+      
         navigation.replace('Home', { userNick: data.nick, userId: userId });
       } else {
         console.error('Usuario no encontrado');
@@ -62,14 +62,14 @@ const LoginFirebaseScreen = ({ navigation }) => {
       .then((userCredential) => {
         const user = userCredential.user;
         console.log('Login exitoso: ', user);
-        setUserId(user.uid); // Esto va a activar el uso de fetchUserData
+        setUserId(user.uid);
       })
       .catch((error) => {
         console.error('Error de autenticación: ', error.code, error.message);
         Alert.alert('Error de inicio de sesión', 'Correo o contraseña incorrectos.');
       })
       .finally(() => {
-        setLoading(false); // Detener la carga una vez que se haya completado el proceso
+        setLoading(false);
       });
   };
   
@@ -217,4 +217,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginFirebaseScreen;
-

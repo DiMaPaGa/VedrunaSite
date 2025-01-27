@@ -6,9 +6,9 @@ import { auth } from '../firebaseConfig';
 const SettingsScreen = ({ navigation }) => {
   const handleSignOut = async () => {
     try {
-      await signOut(auth); // Cierra la sesión del usuario en Firebase
+      await signOut(auth);
       Alert.alert('Sesión cerrada', 'Se ha cerrado la sesión correctamente.');
-      navigation.replace('LoginFirebaseScreen'); // Redirige al login
+      navigation.replace('LoginFirebaseScreen');
     } catch (error) {
       console.error('Error al cerrar sesión:', error.message);
       Alert.alert('Error', 'No se pudo cerrar la sesión. Inténtelo de nuevo.');
@@ -55,4 +55,3 @@ const styles = StyleSheet.create({
 });
 
 export default SettingsScreen;
-

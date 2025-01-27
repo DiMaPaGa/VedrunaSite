@@ -170,12 +170,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#23272A",
     zIndex: 1,
     paddingHorizontal: 18,
-    justifyContent: "center", // Centra el contenido verticalmente
+    justifyContent: "center",
   },
   headerContent: {
-    flexDirection: "row", // Distribuye logo y textos en línea horizontal
-    alignItems: "center", // Centra verticalmente los elementos
-    justifyContent: "space-between", // Espacio entre logo y textos
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 15,
   },
   logoContainer: {
@@ -193,14 +193,14 @@ const styles = StyleSheet.create({
     height: 60,
   },
   textContainer: {
-    flex: 1, // Ocupa el resto del espacio
-    alignItems: "left", // Centra el nick y el título horizontalmente
+    flex: 1,
+    alignItems: "left",
   },
   nick: {
     fontFamily: "Asap Condensed",
     fontSize: 13,
     color: "#FFFFFF",
-    marginBottom: 2, // Espacio entre el nick y el título
+    marginBottom: 2,
     marginHorizontal: 25,
     marginTop: 30,
   },
@@ -226,14 +226,14 @@ const styles = StyleSheet.create({
   },
   headerUserContainer: {
     position: "absolute",
-    top: 0, // Ancla en la parte superior
+    top: 0,
     left: 0,
     right: 0, 
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: "transparent", // Fondo semitransparente para destacar el texto
+    backgroundColor: "transparent",
     zIndex: 1,
   },
   avatar: {
