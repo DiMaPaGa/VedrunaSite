@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     color: '#9FC63B',
     marginTop: 20,
     marginBottom: 30,
-    fontFamily: 'Asap Condensed',
+    fontFamily: 'AsapCondensed-Regular',
     textAlign: 'left',
   },
   inputGroup: {
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     color: '#DFDFDF',
     fontSize: 18,
     fontWeight: '700',
-    fontFamily: 'Asap Condensed',
+    fontFamily: 'AsapCondensed-Regular',
   },
 });
 

@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     marginBottom: 2, 
   },
   iconLabel: {
-    fontFamily: 'Asap Condensed',
+    fontFamily: 'AsapCondensed-Regular',
     fontStyle: 'normal',
     fontWeight: '400',
     fontSize: 11,

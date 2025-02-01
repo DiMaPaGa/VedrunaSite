@@ -1,30 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 const AddPublicationScreen = ({ route }) => {
 
   const { userNick } = route.params || {};
-  console.log('userNick en PublicationScreen: ', userNick)
+  console.log('userNick en PublicationScreen: ', userNick);
 
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  
+  // Solicitar permisos para acceder a la cámara y galería
+  useEffect(() => {
+    const getPermissions = async () => {
+      const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+      const libraryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    };
 
-  // Seleccionar imagen desde la galería
+    getPermissions();
+  }, []);
+
+  // Seleccionar imagen desde la galería o cámara
   const handleImagePick = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
-    }
+    Alert.alert(
+      'Selecciona una opción',
+      '¿Deseas elegir una imagen de la galería o tomar una nueva foto?',
+      [
+        {
+          text: 'Galería',
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              quality: 1,
+            });
+  
+            if (!result.canceled) {
+              setSelectedImage(result.assets[0].uri);
+            }
+          },
+        },
+        {
+          text: 'Cámara',
+          onPress: async () => {
+            const result = await ImagePicker.launchCameraAsync({
+              allowsEditing: true,
+              quality: 1,
+            });
+  
+            if (!result.canceled) {
+              setSelectedImage(result.assets[0].uri);
+            }
+          },
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const uploadImageToCloudinary = async (imageUri) => {
@@ -139,7 +176,8 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: '#23272A',
-    padding: 20,
+    padding: 25,
+    paddingTop: 50,
     alignItems: 'center',
   },
   header: {
@@ -167,10 +205,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 15,
-    width: '100%', 
+    width: '100%',
   },
   textArea: {
-    height: 80, 
+    height: 80,
   },
   button: {
     backgroundColor: '#23272A',
