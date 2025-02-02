@@ -291,7 +291,9 @@ const styles = StyleSheet.create({
   },
   noComments: {
     color: "#868686", 
-    fontFamily: "AsapCondensed-Regular"
+    fontFamily: "AsapCondensed-Regular",
+    marginHorizontal: 15,
+    marginTop: 10,
   },
   commentItem: { 
     flexDirection: "row", 

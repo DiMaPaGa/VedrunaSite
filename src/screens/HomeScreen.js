@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image, Text, View, StyleSheet } from 'react-native';
 import PublicationScreen from './PublicationScreen';
-import SettingsScreen from './SettingsScreen';
+import TicketsScreen from './TicketsScreen';
 import AddPublicationScreen from './AddPublicationScreen';
 
 const Tab = createBottomTabNavigator();
@@ -68,7 +68,8 @@ const HomeScreen = ({route}) => {
 
       <Tab.Screen
         name="Ajustes"
-        component={SettingsScreen}
+        component={TicketsScreen}
+        initialParams={{ userNick }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
