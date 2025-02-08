@@ -37,17 +37,17 @@ const LoginFirebaseScreen = ({ navigation }) => {
       const response = await fetch(`http://192.168.1.168:8080/proyecto01/users/${userId}`);
       const data = await response.json();
 
-      if (data) {
+      if (data && data.nick) {
         setUserNick(data.nick);
-        console.log('Nick del usuario:', data.nick);
-
-      
-        navigation.replace('Home', { userNick: data.nick, userId: userId });
+        console.log('✅ Nick del usuario:', data.nick);
+  
+        // Navegar solo cuando tengamos ambos valores correctos
+        navigation.replace('Home', { userNick: data.nick, UserId: userId });
       } else {
-        console.error('Usuario no encontrado');
+        console.error('🚨 Usuario no encontrado o sin nick válido');
       }
     } catch (error) {
-      console.error('Error al obtener los datos del usuario:', error);
+      console.error('🚨 Error al obtener los datos del usuario:', error);
     }
   };
 
@@ -57,21 +57,25 @@ const LoginFirebaseScreen = ({ navigation }) => {
       return;
     }
     setLoading(true);
-
+  
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
-        console.log('Login exitoso: ', user);
-        setUserId(user.uid);
+        console.log('✅ Login exitoso:', user);
+  
+        setUserId(user.uid);  // Guardamos el UserId
+  
+  
       })
       .catch((error) => {
-        console.error('Error de autenticación: ', error.code, error.message);
+        console.error('🚨 Error de autenticación:', error.code, error.message);
         Alert.alert('Error de inicio de sesión', 'Correo o contraseña incorrectos.');
       })
       .finally(() => {
         setLoading(false);
       });
   };
+  
   
 
   if (loading) {

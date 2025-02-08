@@ -8,35 +8,33 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
-  Button,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
-const COMMENT_API_URL = "http://192.168.1.168:8080/proyecto01/comentarios/put";
-const POST_LIKE_API_URL = "http://192.168.1.168:8080/proyecto01/publicaciones/put";
+const API_BASE_URL = "http://192.168.1.168:8080/proyecto01";
 
 const SinglePublicationScreen = ({ route }) => {
   const navigation = useNavigation();
   const { publicacion, userNick } = route.params;
-  
+
   const [comentarios, setComentarios] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
-  const [likes, setLikes] = useState(publicacion.like.length); // Contador de likes
-  const [userLiked, setUserLiked] = useState(publicacion.like.includes(userNick)); 
+  const [likes, setLikes] = useState(publicacion.like.length);
+  const [userLiked, setUserLiked] = useState(publicacion.like.includes(userNick));
   const [nuevoComentario, setNuevoComentario] = useState("");
-  const [isActiveCancelar, setIsActiveCancelar] = useState(false); // Estado para el botón Cancelar
-  const [isActivePublicar, setIsActivePublicar] = useState(false); // Estado para el botón Publicar
+  const [isActiveCancelar, setIsActiveCancelar] = useState(false);
+  const [isActivePublicar, setIsActivePublicar] = useState(false);
+  const [userProfilePic, setUserProfilePic] = useState(require("../../assets/iconUser.png"));
 
   useEffect(() => {
     fetchComentarios();
+    fetchUserProfilePic(publicacion.user_id);
   }, []);
 
   const fetchComentarios = async () => {
     try {
-      const response = await fetch(`http://192.168.1.168:8080/proyecto01/comentarios/${publicacion.id}`);
-      if (!response.ok) {
-        throw new Error("Error al obtener los comentarios");
-      }
+      const response = await fetch(`${API_BASE_URL}/comentarios/${publicacion.id}`);
+      if (!response.ok) throw new Error("Error al obtener los comentarios");
       const data = await response.json();
       setComentarios(data);
     } catch (error) {
@@ -44,11 +42,45 @@ const SinglePublicationScreen = ({ route }) => {
     }
   };
 
+  const fetchUserProfilePic = async (nick) => {
+    try {
+        // Obtener el user_id desde el nick
+        const userResponse = await fetch(`http://192.168.1.168:8080/proyecto01/users/nick/${nick}`);
+        if (!userResponse.ok) throw new Error("Error al obtener el user_id");
+
+        const userData = await userResponse.json();
+        const userId = userData.user_id;
+        console.log("✅ user_id obtenido:", userId);
+
+        // Obtener la foto de perfil usando el user_id
+        const profileUrl = `http://192.168.1.168:8080/proyecto01/users/${userId}`;
+        console.log("📌 URL para obtener perfil:", profileUrl);
+
+        const profileResponse = await fetch(profileUrl);
+        if (!profileResponse.ok) throw new Error("Error al obtener la foto de perfil");
+
+        const profileData = await profileResponse.json();
+        console.log("📸 Foto de perfil obtenida:", profileData.profile_picture);
+
+        if (!profileData.profile_picture) {
+            console.warn("⚠️ No hay foto de perfil, usando imagen predeterminada.");
+            return require("../../assets/iconUser.png");
+        }
+
+        return { uri: profileData.profile_picture };  // ⚠️ Asegúrate de devolver un objeto con `{ uri }`
+
+    } catch (error) {
+        console.error("❌ Error al obtener la foto de perfil:", error);
+        return require("../../assets/iconUser.png");
+    }
+};
+
+
   const handleAgregarComentario = async () => {
-    if (nuevoComentario.trim().length === 0) return;
+    if (!nuevoComentario.trim()) return;
 
     try {
-      const response = await fetch(COMMENT_API_URL, {
+      const response = await fetch(`${API_BASE_URL}/comentarios/put`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -58,32 +90,26 @@ const SinglePublicationScreen = ({ route }) => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Error al publicar el comentario");
-      }
+      if (!response.ok) throw new Error("Error al publicar el comentario");
 
       setNuevoComentario("");
       setModalVisible(false);
-      fetchComentarios(); // Actualizar los comentarios
+      fetchComentarios();
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error agregando comentario:", error);
     }
   };
 
   const toggleLike = async () => {
     try {
-      const response = await fetch(
-        `http://192.168.1.168:8080/proyecto01/publicaciones/put/${publicacion.id}/${userNick}`, 
-        { method: "PUT" }
-      );
-  
-      if (!response.ok) {
-        throw new Error("Error al actualizar el 'Me gusta'");
-      }
-  
-      // Actualizar estado local después de la respuesta del servidor
+      const response = await fetch(`${API_BASE_URL}/publicaciones/put/${publicacion.id}/${userNick}`, {
+        method: "PUT",
+      });
+
+      if (!response.ok) throw new Error("Error al actualizar el 'Me gusta'");
+
       setUserLiked(!userLiked);
-      setLikes(userLiked ? likes - 1 : likes + 1);
+      setLikes((prevLikes) => (userLiked ? prevLikes - 1 : prevLikes + 1));
     } catch (error) {
       console.error("Error en toggleLike:", error);
     }
@@ -91,7 +117,7 @@ const SinglePublicationScreen = ({ route }) => {
 
   const renderItem = ({ item }) => (
     <View style={styles.commentItem}>
-      <Image source={require("../../assets/iconUser.png")} style={styles.avatar} />
+      <Image source={userProfilePic} style={styles.avatar} />
       <View style={styles.commentText}>
         <Text style={styles.commentUser}>{item.user_id}</Text>
         <Text style={styles.commentContent}>{item.comentario}</Text>
@@ -101,18 +127,15 @@ const SinglePublicationScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      {/* Botón para regresar */}
       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
         <Image source={require("../../assets/return.png")} style={styles.backIcon} />
       </TouchableOpacity>
 
-      {/* Contenido desplazable */}
       <FlatList
         ListHeaderComponent={
           <>
-            {/* Información de la publicación */}
             <View style={styles.headerUserContainer}>
-              <Image source={require("../../assets/iconUser.png")} style={styles.avatar} />
+              <Image source={userProfilePic} style={styles.avatar} />
               <View style={styles.userTextContainer}>
                 <Text style={styles.publishedBy}>Publicado por</Text>
                 <Text style={styles.user_id}>{publicacion.user_id}</Text>
@@ -122,7 +145,6 @@ const SinglePublicationScreen = ({ route }) => {
             <View style={styles.publicationContent}>
               <Image source={{ uri: publicacion.image_url }} style={styles.publicationImage} />
 
-              {/* Sección de "Me gusta" */}
               <View style={styles.likesContainer}>
                 <TouchableOpacity onPress={toggleLike}>
                   <Image
@@ -137,7 +159,6 @@ const SinglePublicationScreen = ({ route }) => {
                 <Text style={styles.likesText}>{likes} Me gusta</Text>
               </View>
 
-              {/* Título y descripción */}
               <View style={styles.publicationText}>
                 <Text style={styles.title}>{publicacion.titulo}</Text>
                 <Text style={styles.description}>{publicacion.comentario}</Text>
@@ -147,7 +168,6 @@ const SinglePublicationScreen = ({ route }) => {
               </Text>
             </View>
 
-            {/* Título de los comentarios */}
             <Text style={styles.commentsTitle}>COMENTARIOS</Text>
           </>
         }
@@ -155,49 +175,43 @@ const SinglePublicationScreen = ({ route }) => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         ListEmptyComponent={<Text style={styles.noComments}>No hay comentarios</Text>}
-        contentContainerStyle={{ paddingBottom: 100 }} // Asegura que el contenido no se oculte por el botón
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
 
-      {/* Botón para agregar comentario */}
       <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addCommentButton}>
         <Image source={require("../../assets/anadirMensaje.png")} style={styles.addCommentIcon} />
       </TouchableOpacity>
 
-      {/* Modal para agregar comentario */}
       <Modal visible={modalVisible} transparent={true} animationType="slide">
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Comentarios:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Max 500 caracteres"
-            maxLength={500}
-            multiline
-            value={nuevoComentario}
-            onChangeText={setNuevoComentario}
-            placeholderTextColor="#DFDFDF"
-          />
-          <View style={styles.modalButtons}>
-            <TouchableOpacity
-              onPressIn={() => setIsActiveCancelar(true)} // Cuando el usuario toca el botón
-              onPressOut={() => setIsActiveCancelar(false)} // Cuando el usuario deja de tocar
-              onPress={() => setModalVisible(false)} // Acción al presionar el botón
-              style={[styles.button, isActiveCancelar && styles.buttonActive]} // Cambiar el estilo si está activo
-            >
-              <Text style={styles.buttonText}>Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPressIn={() => setIsActivePublicar(true)} // Cuando el usuario toca el botón
-              onPressOut={() => setIsActivePublicar(false)} // Cuando el usuario deja de tocar
-              onPress={handleAgregarComentario} // Acción al presionar el botón
-              style={[styles.button, isActivePublicar && styles.buttonActive]} // Cambiar el estilo si está activo
-            >
-              <Text style={styles.buttonText}>Publicar</Text>
-            </TouchableOpacity>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Comentarios:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Max 500 caracteres"
+              maxLength={500}
+              multiline
+              value={nuevoComentario}
+              onChangeText={setNuevoComentario}
+              placeholderTextColor="#DFDFDF"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={[styles.button, isActiveCancelar && styles.buttonActive]}
+              >
+                <Text style={styles.buttonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleAgregarComentario}
+                style={[styles.button, isActivePublicar && styles.buttonActive]}
+              >
+                <Text style={styles.buttonText}>Publicar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
     </View>
   );
 };

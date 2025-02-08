@@ -6,6 +6,7 @@ import HomeScreen from '../HomeScreen';
 import SinglePublicationScreen from '../SinglePublicationScreen';
 import TicketsScreen from '../TicketsScreen';
 import TicketFormScreen from '../TicketFormScreen'; 
+import ProfileScreen from '../ProfileScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -20,6 +21,7 @@ const StackNavigator = () => {
       <Stack.Screen name="SinglePublication" component={SinglePublicationScreen} options={{ headerShown: false }} />
       <Stack.Screen name="TicketScreen" component={TicketsScreen} options={{ headerShown: false }}  />
       <Stack.Screen name="TicketFormScreen" component={TicketFormScreen} options={{ headerShown: false }} />
+      <Stack.Screen name='ProfileScreen' component={ProfileScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };

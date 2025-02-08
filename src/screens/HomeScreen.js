@@ -4,6 +4,7 @@ import { Image, Text, View, StyleSheet } from 'react-native';
 import PublicationScreen from './PublicationScreen';
 import TicketsScreen from './TicketsScreen';
 import AddPublicationScreen from './AddPublicationScreen';
+import ProfileScreen from './ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -24,8 +25,13 @@ const CustomTabBarIcon = ({ focused, activeIcon, inactiveIcon, label }) => (
 );
 
 const HomeScreen = ({route}) => {
-  const { userNick, UserId } = route.params;
+  const { userNick, UserId } = route.params || {};
+  console.log("✅ userNick en HomeScreen:", userNick);
+  console.log("✅ UserId en HomeScreen:", UserId);
 
+  if (!UserId) {
+    console.error("🚨 ERROR: UserId no recibido en HomeScreen.");
+  }
   return(
     <Tab.Navigator
       screenOptions={{
@@ -37,7 +43,7 @@ const HomeScreen = ({route}) => {
       <Tab.Screen
         name="Publicaciones"
         component={PublicationScreen}
-        initialParams={{ userNick }} 
+        initialParams={{ userNick, UserId }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
@@ -53,7 +59,7 @@ const HomeScreen = ({route}) => {
       <Tab.Screen
         name="Add"
         component={AddPublicationScreen}
-        initialParams={{ userNick }} 
+        initialParams={{ userNick, UserId }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
@@ -69,7 +75,7 @@ const HomeScreen = ({route}) => {
       <Tab.Screen
         name="Ajustes"
         component={TicketsScreen}
-        initialParams={{ userNick }} 
+        initialParams={{ userNick, UserId }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
@@ -77,6 +83,23 @@ const HomeScreen = ({route}) => {
               activeIcon={require('../../assets/ajustes.png')}
               inactiveIcon={require('../../assets/ajustesgris.png')}
               label="Ajustes"
+            />
+          ),
+        }}
+      />
+
+      {/* Nueva pestaña de Perfil */}
+      <Tab.Screen
+        name="Perfil"
+        component={ProfileScreen}
+        initialParams={{ userNick, UserId }} 
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <CustomTabBarIcon
+              focused={focused}
+              activeIcon={require('../../assets/addg.png')}
+              inactiveIcon={require('../../assets/addgris.png')}
+              label="Perfil"
             />
           ),
         }}
