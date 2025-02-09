@@ -13,17 +13,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
+import { API_HOST } from '@env';
 
 
-const API_URL = "http://192.168.1.168:8080/proyecto01/publicaciones";
-const USER_API_URL = "http://192.168.1.168:8080/proyecto01/users/name";
+const API_URL = `${API_HOST}/proyecto01/publicaciones`;
+const USER_API_URL = `${API_HOST}/proyecto01/users/name`;                              
 
 const { width } = Dimensions.get("window");
 
 const PublicationScreen = ({route}) => {
 
   const { userNick } = route.params || {};
-  console.log('userNick en PublicationScreen: ', userNick);
+  
 
   const navigation = useNavigation(); 
   
@@ -62,7 +63,7 @@ const PublicationScreen = ({route}) => {
 
       setPublicaciones(publicacionesConUsuarios);
     } catch (error) {
-      console.error("Error:", error);
+      
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,7 @@ const PublicationScreen = ({route}) => {
     });
 
     // Actualizamos la publicación en el backend
-    await fetch(`http://192.168.1.168:8080/proyecto01/publicaciones/put/${publicacionId}/${userId}`, {
+    await fetch(`${API_HOST}/proyecto01/publicaciones/put/${publicacionId}/${userId}`, {
       method: 'PUT',
     });
   };

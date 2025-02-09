@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList, Alert  } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { auth } from '../firebaseConfig';
 import { signOut ,onAuthStateChanged } from "firebase/auth";
 import * as ImagePicker from 'expo-image-picker';
+import { API_HOST } from '@env';
 
 const ProfileScreen = ({ route }) => {
   const { UserId } = route.params;
@@ -16,14 +17,6 @@ const ProfileScreen = ({ route }) => {
   const [showLogout, setShowLogout] = useState(false);
   
   const navigation = useNavigation();
-
-  console.log("📌 route.params en ProfileScreen:", route.params);
-  console.log("✅ Recibido en ProfileScreen -> userNick:", route.params?.userNick);
-  console.log("✅ Recibido en ProfileScreen -> UserId:", route.params?.UserId);
-
-  if (!route.params?.UserId) {
-    console.error("🚨 ERROR: No se recibió UserId en ProfileScreen.");
-  }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -39,28 +32,16 @@ const ProfileScreen = ({ route }) => {
         navigation.replace('LoginFirebaseScreen');
       })
       .catch((error) => {
-        console.error('Error al cerrar sesión:', error);
-        Alert.alert('Error', 'No se pudo cerrar sesión.');
+        Alert.alert(error, 'No se pudo cerrar sesión.');
       });
   };
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
-      if (!UserId) {
-        console.error("🚨 ERROR: UserId no recibido en ProfileScreen.");
-        return;
-      }
-  
-      console.log(`🔍 Fetching user data from: http://192.168.1.168:8080/proyecto01/users/${UserId}`);
-      
-      const userResponse = await fetch(`http://192.168.1.168:8080/proyecto01/users/${UserId}`);
-      if (!userResponse.ok) throw new Error(`⚠️ Error HTTP ${userResponse.status}`);
-      
+      const userResponse = await fetch(`${API_HOST}/proyecto01/users/${UserId}`);
       const userData = await userResponse.json();
-      console.log("✅ Usuario obtenido:", userData);
-      
+
       if (!userData || !userData.nick) {
-        console.error("❌ No se encontró el nick del usuario.");
         setNick("Desconocido");
         return;
       }
@@ -68,49 +49,33 @@ const ProfileScreen = ({ route }) => {
       setNick(userData.nick);
       setProfileImage(userData.profile_picture || null);
   
-      console.log(`🔍 Fetching posts for nick: ${userData.nick}`);
-      
-      const postsResponse = await fetch(`http://192.168.1.168:8080/proyecto01/publicaciones/user/${userData.nick}`);
-      if (!postsResponse.ok) throw new Error(`⚠️ Error HTTP ${postsResponse.status}`);
-      
+      const postsResponse = await fetch(`${API_HOST}/proyecto01/publicaciones/user/${userData.nick}`);
       const postsData = await postsResponse.json();
-      console.log("✅ Publicaciones obtenidas:", postsData);
       
       if (Array.isArray(postsData)) {
-        const reversedPosts = postsData.reverse();
-        setPosts(reversedPosts);
-  
-        // 💡 Asegurar que el filtro de "me gusta" no falle si `like` es undefined
-        const liked = reversedPosts.filter(post => Array.isArray(post.like) && post.like.includes(userData.nick));
-        setLikedPosts(liked);
-      } else {
-        console.error("❌ La respuesta de publicaciones no es un array:", postsData);
+        setPosts(postsData.reverse());
       }
+  
       
+      const likedPostsResponse = await fetch(`${API_HOST}/proyecto01/publicaciones/liked/${userData.nick}`);
+      const likedPostsData = await likedPostsResponse.json();
+  
+      if (Array.isArray(likedPostsData)) {
+        setLikedPosts(likedPostsData.reverse());
+      }
     } catch (error) {
-      console.error("🚨 Error en fetchUserData:", error);
+      Alert.alert('Error', 'No se pudieron cargar los datos.');
     }
-  };
-
-  // Usamos el addListener para recargar las publicaciones cuando el usuario regrese a la pantalla de perfil
-  useEffect(() => {
-    const focusListener = navigation.addListener('focus', () => {
-      // Se ejecuta cada vez que la pantalla se enfoca (cuando regresas a ella)
-      fetchUserData(); // Recargar publicaciones
-    });
-
-    // Limpiar el listener cuando se desmonte el componente
-    return () => focusListener();
-  }, [navigation]);
-
-  useEffect(() => {
-    if (!UserId) {
-      console.error("🚨 ERROR: UserId no recibido en ProfileScreen.");
-      return;
-    }
-    
-    fetchUserData();
   }, [UserId]);
+
+  useEffect(() => {
+    const focusListener = navigation.addListener('focus', fetchUserData);
+    return focusListener;
+  }, [navigation, fetchUserData]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   useEffect(() => {
     const getPermissions = async () => {
@@ -161,7 +126,7 @@ const ProfileScreen = ({ route }) => {
     );
   };
 
-  // Subir imagen a Cloudinary
+  
   const uploadImageToCloudinary = async (imageUri) => {
     const formData = new FormData();
     formData.append('file', { uri: imageUri, name: 'image.jpg', type: 'image/jpeg' });
@@ -175,20 +140,18 @@ const ProfileScreen = ({ route }) => {
       });
       const data = await response.json();
       const imageUrl = data.secure_url;
-      console.log('Imagen subida:', imageUrl);
 
-      // Actualizamos el perfil del usuario en la base de datos
+
       await updateProfileImage(imageUrl);
     } catch (error) {
-      console.error('Error al subir la imagen:', error);
     }
   };
 
-  // Actualizar imagen de perfil en la base de datos
+
   const updateProfileImage = async (imageUrl) => {
     try {
-      const response = await fetch(`http://192.168.1.168:8080/proyecto01/users/${UserId}`, {
-        method: 'PUT', // Usamos PUT para actualizar el usuario
+      const response = await fetch(`${API_HOST}/proyecto01/users/${UserId}`, {
+        method: 'PUT', 
         headers: {
           'Content-Type': 'application/json',
         },
@@ -196,13 +159,11 @@ const ProfileScreen = ({ route }) => {
       });
 
       if (response.ok) {
-        console.log('Imagen de perfil actualizada');
-        setProfileImage(imageUrl); // Actualizamos la imagen localmente
+        setProfileImage(imageUrl);
       } else {
         Alert.alert('Error', 'No se pudo actualizar la imagen del perfil.');
       }
     } catch (error) {
-      console.error('Error al actualizar imagen:', error);
       Alert.alert('Error', 'Ocurrió un error al actualizar la imagen.');
     }
   };
@@ -242,10 +203,10 @@ const ProfileScreen = ({ route }) => {
 
       <View style={styles.filterButtons}>
         <TouchableOpacity onPress={() => setViewLikes(false)}>
-          <Image source={require('../../assets/addgris.png')} style={[styles.icon, !viewLikes && styles.activeIcon]} />
+          <Image source={require('../../assets/ViewPub.png')} style={[styles.icon, !viewLikes && styles.activeIcon]} />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setViewLikes(true)}>
-          <Image source={require('../../assets/Favorite.png')} style={[styles.icon, viewLikes && styles.activeIcon]} />
+          <Image source={require('../../assets/PubGustan.png')} style={[styles.icon, viewLikes && styles.activeIcon]} />
         </TouchableOpacity>
       </View>
 
@@ -259,30 +220,93 @@ const ProfileScreen = ({ route }) => {
             <Image source={{ uri: item.image_url }} style={styles.postImage} />
           </TouchableOpacity>
         )}
-        contentContainerStyle={styles.flatListContentContainer} // Agregar un estilo para el contenido de FlatList
+        contentContainerStyle={styles.flatListContentContainer}
       />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#323639', padding: 10 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', paddingVertical: 20 },
-  profileImage: { width: 80, height: 80, borderRadius: 50 },
-  stats: { alignItems: 'center' },
-  statNumber: { fontSize: 18, fontWeight: 'bold', color: '#FFF' },
-  statLabel: { fontSize: 12, color: '#868686' },
-  username: { textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: '#FFF' },
-  email: { textAlign: 'center', fontSize: 14, color: '#868686' },
-  filterButtons: { flexDirection: 'row', justifyContent: 'center', marginVertical: 10 },
-  icon: { width: 30, height: 30, marginHorizontal: 20 },
-  postImage: { width: 120, height: 120, margin: 2 },
-  activeIcon: { tintColor: '#000' },
-  flatListContentContainer: {
-    paddingBottom: "15%", // Aumentamos el padding en la parte inferior para dar espacio a la barra de navegación
+  container: { 
+    flex: 1, 
+    backgroundColor: '#323639', 
+    padding: 10 
   },
-  logoutButton: { backgroundColor: '#ff4d4d', padding: 10, borderRadius: 5, marginTop: 10, alignSelf: 'center' },
-  logoutText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+  header: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-around', 
+    paddingVertical: 20 
+  },
+  profileImage: { 
+    width: 80,
+    height: 80,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: '#9FC63B' 
+  },
+  stats: { 
+    alignItems: 'center' 
+  },
+  statNumber: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    color: '#DFDFDF'
+  },
+  statLabel: { 
+    fontSize: 12, 
+    color: '#868686' 
+  },
+  username: { 
+    textAlign: 'left',
+    paddingHorizontal: "5%", 
+    fontSize: 20, 
+    fontWeight: 'bold', 
+    color: '#9FC63B' 
+  },
+  email: { 
+    textAlign: 'left',
+    paddingHorizontal: "5%", 
+    fontSize: 14, 
+    color: '#868686',
+    textDecorationLine: 'underline',
+     
+  },
+  filterButtons: { 
+    flexDirection: 'row', 
+    justifyContent: 'center', 
+    marginVertical: 10 
+  },
+  icon: { 
+    width: 30, 
+    height: 30, 
+    marginHorizontal: 20 
+  },
+  postImage: { 
+    width: 120, 
+    height: 120, 
+    margin: 2,
+    borderWidth: 1,
+    borderColor: '#DFDFDF' 
+  },
+  activeIcon: { 
+    tintColor: '#9FC63B' 
+  },
+  flatListContentContainer: {
+    paddingBottom: "15%",
+  },
+  logoutButton: { 
+    backgroundColor: '#ff4d4d', 
+    padding: 10, 
+    borderRadius: 5, 
+    marginTop: 10, 
+    alignSelf: 'center' 
+  },
+  logoutText: { 
+    color: '#DFDFDF', 
+    fontSize: 16, 
+    fontWeight: 'bold' 
+  }
 });
 
 export default ProfileScreen;

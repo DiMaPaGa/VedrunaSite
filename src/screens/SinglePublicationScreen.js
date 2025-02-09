@@ -10,8 +10,13 @@ import {
   TextInput,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Dimensions } from "react-native";
+import { API_HOST } from '@env';
 
-const API_BASE_URL = "http://192.168.1.168:8080/proyecto01";
+
+const screenWidth = Dimensions.get("window").width;
+
+const API_BASE_URL = `${API_HOST}/proyecto01`;
 
 const SinglePublicationScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -24,12 +29,21 @@ const SinglePublicationScreen = ({ route }) => {
   const [nuevoComentario, setNuevoComentario] = useState("");
   const [isActiveCancelar, setIsActiveCancelar] = useState(false);
   const [isActivePublicar, setIsActivePublicar] = useState(false);
-  const [userProfilePic, setUserProfilePic] = useState(require("../../assets/iconUser.png"));
+  const [userProfilePic, setUserProfilePic] = useState("");
 
   useEffect(() => {
     fetchComentarios();
     fetchUserProfilePic(publicacion.user_id);
   }, []);
+
+  useEffect(() => {
+    // Activar o desactivar el botón de publicar según el comentario
+    if (nuevoComentario.trim()) {
+      setIsActivePublicar(true);
+    } else {
+      setIsActivePublicar(false);
+    }
+  }, [nuevoComentario]);
 
   const fetchComentarios = async () => {
     try {
@@ -38,41 +52,36 @@ const SinglePublicationScreen = ({ route }) => {
       const data = await response.json();
       setComentarios(data);
     } catch (error) {
-      console.error("Error:", error);
+      
     }
   };
 
   const fetchUserProfilePic = async (nick) => {
     try {
         // Obtener el user_id desde el nick
-        const userResponse = await fetch(`http://192.168.1.168:8080/proyecto01/users/nick/${nick}`);
+        const userResponse = await fetch(`${API_HOST}/proyecto01/users/nick/${nick}`);
         if (!userResponse.ok) throw new Error("Error al obtener el user_id");
 
         const userData = await userResponse.json();
         const userId = userData.user_id;
-        console.log("✅ user_id obtenido:", userId);
 
         // Obtener la foto de perfil usando el user_id
-        const profileUrl = `http://192.168.1.168:8080/proyecto01/users/${userId}`;
-        console.log("📌 URL para obtener perfil:", profileUrl);
+        const profileUrl = `${API_HOST}/proyecto01/users/${userId}`;
 
         const profileResponse = await fetch(profileUrl);
         if (!profileResponse.ok) throw new Error("Error al obtener la foto de perfil");
 
         const profileData = await profileResponse.json();
-        console.log("📸 Foto de perfil obtenida:", profileData.profile_picture);
 
-        if (!profileData.profile_picture) {
-            console.warn("⚠️ No hay foto de perfil, usando imagen predeterminada.");
-            return require("../../assets/iconUser.png");
-        }
+        if (profileData.profile_picture) {
+          setUserProfilePic({ uri: profileData.profile_picture });
+      } else {
+          setUserProfilePic(require("../../assets/iconUser.png"));
+      }
 
-        return { uri: profileData.profile_picture };  // ⚠️ Asegúrate de devolver un objeto con `{ uri }`
-
-    } catch (error) {
-        console.error("❌ Error al obtener la foto de perfil:", error);
-        return require("../../assets/iconUser.png");
-    }
+  } catch (error) {
+      setUserProfilePic(require("../../assets/iconUser.png"));
+  }
 };
 
 
@@ -96,9 +105,10 @@ const SinglePublicationScreen = ({ route }) => {
       setModalVisible(false);
       fetchComentarios();
     } catch (error) {
-      console.error("Error agregando comentario:", error);
+      
     }
   };
+  
 
   const toggleLike = async () => {
     try {
@@ -111,13 +121,12 @@ const SinglePublicationScreen = ({ route }) => {
       setUserLiked(!userLiked);
       setLikes((prevLikes) => (userLiked ? prevLikes - 1 : prevLikes + 1));
     } catch (error) {
-      console.error("Error en toggleLike:", error);
     }
   };
 
   const renderItem = ({ item }) => (
     <View style={styles.commentItem}>
-      <Image source={userProfilePic} style={styles.avatar} />
+      <Image source={userProfilePic} style={styles.commentAvatar} />
       <View style={styles.commentText}>
         <Text style={styles.commentUser}>{item.user_id}</Text>
         <Text style={styles.commentContent}>{item.comentario}</Text>
@@ -143,8 +152,9 @@ const SinglePublicationScreen = ({ route }) => {
             </View>
 
             <View style={styles.publicationContent}>
-              <Image source={{ uri: publicacion.image_url }} style={styles.publicationImage} />
-
+              <View style={{ width: screenWidth, backgroundColor: "#9FC63B" , overflow: "hidden" }}>
+                <Image source={{ uri: publicacion.image_url }} style={styles.publicationImage} />
+              </View>
               <View style={styles.likesContainer}>
                 <TouchableOpacity onPress={toggleLike}>
                   <Image
@@ -175,7 +185,7 @@ const SinglePublicationScreen = ({ route }) => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         ListEmptyComponent={<Text style={styles.noComments}>No hay comentarios</Text>}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 0 }}
       />
 
       <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.addCommentButton}>
@@ -220,23 +230,23 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: "#323639", 
-    padding: 10 
   },
   backButton: { 
     position: "absolute", 
-    top: 40, 
+    top: 60, 
     left: 20, 
     zIndex: 10 
   },
   backIcon: { 
     width: 20, 
     height: 30, 
-    color: "#9FC63B" 
+    color: "#9FC63B",
+    marginTop: "90%", 
   },
   headerUserContainer: {
     flexDirection: "row",
-    marginBottom: 20,
-    paddingVertical: 20,
+    marginBottom: 0,
+    paddingVertical: 0,
     paddingHorizontal: "20%",
     alignItems: "center",
   },
@@ -246,10 +256,16 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     borderWidth: 3, 
     borderColor: "#9FC63B",
-    marginRight: 20 
+    marginRight: 20,
+    marginTop: "30%",
+    marginBottom: "5%",
   },
   userTextContainer: { 
-    flex: 1 
+    flex: 1,
+    marginTop: "30%",
+    marginBottom: "7%",
+    paddingBottom: 0,
+    
   },
   publishedBy: { 
     fontSize: 14, 
@@ -271,12 +287,20 @@ const styles = StyleSheet.create({
   },
   publicationContent: { 
     marginBottom: 30,
-    width: "100%", 
+    width: "100%",
+    padding: 0,
+    margin: 0,
+
   },
-  publicationImage: { 
-    width: "100%", 
-    height: 300,
-    resizeMode: "cover"
+  publicationImage: {
+    flex: 1, 
+    width: screenWidth, 
+    height: 400,
+    resizeMode: "cover",
+    alignSelf: "stretch",
+    borderBottomWidth: 2,
+    borderBottomColor: "#9FC63B",
+    marginBottom: 3,
   },
   publicationText: { 
     marginTop: 20, 
@@ -311,11 +335,13 @@ const styles = StyleSheet.create({
   },
   commentItem: { 
     flexDirection: "row", 
-    marginBottom: 30, 
-    alignItems: "center" 
+    marginBottom: 20, 
+    alignItems: "center",
+    paddingHorizontal: 15, 
   },
   commentText: { 
-    flex: 1 ,
+    flex: 1,
+    paddingTop: 5, 
   },
   commentUser: { 
     color: "#DFDFDF", 
@@ -326,11 +352,21 @@ const styles = StyleSheet.create({
   },
   addCommentButton: {
     position: "absolute",
-    bottom: 20,
+    bottom: 80,
     right: 20,
     backgroundColor: "#9FC63B",
     borderRadius: 100,
   },
+  commentAvatar: { 
+    width: 40, 
+    height: 40,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: "#9FC63B",  
+    marginRight: 15,  
+    marginTop: 5,  
+  },
+
   addCommentIcon: { 
     width: 55, 
     height: 55, 
@@ -348,10 +384,10 @@ const styles = StyleSheet.create({
     left: "5%",
     right: "5%",
     top: "20%",
-    backgroundColor: "#23272A", // Fondo oscuro del modal
+    backgroundColor: "#23272A", 
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#9FC63B", // Borde verde
+    borderColor: "#9FC63B", 
     padding: 20,
     justifyContent: "space-between", 
   },
@@ -359,7 +395,7 @@ const styles = StyleSheet.create({
   modalTitle: { 
     fontSize: 18, 
     color: "#9FC63B", 
-    fontFamily: "Rajdhani", // Fuente de Figma para el título
+    fontFamily: "Rajdhani", 
     marginTop: "10%",
   },
 
@@ -368,7 +404,7 @@ const styles = StyleSheet.create({
     borderColor: "#868686", 
     borderRadius: 10, 
     padding: 10, 
-    color: "#DFDFDF", // Color de texto
+    color: "#DFDFDF", 
     fontSize: 16,
     textAlignVertical: "top", 
     backgroundColor: "#323639",
@@ -381,14 +417,14 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: "#23272A", // Fondo del botón
+    backgroundColor: "#23272A", 
     borderColor: "#23272A",
     borderWidth: 2, 
     padding: 10, 
     borderRadius: 5,
     alignItems: 'center', 
     marginVertical: 10,
-    width: '45%', // Ajuste del tamaño
+    width: '45%', 
     alignSelf: "center",
   },
 
@@ -406,7 +442,7 @@ const styles = StyleSheet.create({
 
   buttonText: {
     fontSize: 16, 
-    color: "#DFDFDF", // Color de texto en los botones
+    color: "#DFDFDF", 
     fontFamily: "AsapCondensed-Bold",
     textTransform: "uppercase", 
   },

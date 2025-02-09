@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
+import { Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { API_HOST } from '@env';
 
 const TicketFormScreen = () => {
   const { userNick } = useRoute().params || {};
@@ -27,7 +28,7 @@ const TicketFormScreen = () => {
     };
 
     try {
-      const response = await fetch('http://192.168.1.168:8080/tickets/crear', {
+      const response = await fetch(`${API_HOST}/tickets/crear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(ticketData),
@@ -43,7 +44,6 @@ const TicketFormScreen = () => {
         Alert.alert('Error', 'No se pudo crear la incidencia.');
       }
     } catch (error) {
-      console.error('Error al crear la incidencia:', error);
       Alert.alert('Error', 'Ocurrió un error al crear la incidencia.');
     } finally {
       setIsLoading(false);
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     color: '#9FC63B',
     fontSize: 16,
     marginBottom: "3%",
-    alignSelf: 'flex-start', // Alinea el texto a la izquierda
+    alignSelf: 'flex-start',
   },
   input: {
     backgroundColor: '#323639',

@@ -1,10 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image, Text, View, StyleSheet } from 'react-native';
-import PublicationScreen from './PublicationScreen';
+import PublicationStack from './navigation/PublicationdStack';
 import TicketsScreen from './TicketsScreen';
 import AddPublicationScreen from './AddPublicationScreen';
 import ProfileScreen from './ProfileScreen';
+import SinglePublicationScreen from './SinglePublicationScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -26,12 +27,8 @@ const CustomTabBarIcon = ({ focused, activeIcon, inactiveIcon, label }) => (
 
 const HomeScreen = ({route}) => {
   const { userNick, UserId } = route.params || {};
-  console.log("✅ userNick en HomeScreen:", userNick);
-  console.log("✅ UserId en HomeScreen:", UserId);
 
-  if (!UserId) {
-    console.error("🚨 ERROR: UserId no recibido en HomeScreen.");
-  }
+
   return(
     <Tab.Navigator
       screenOptions={{
@@ -42,7 +39,7 @@ const HomeScreen = ({route}) => {
     >
       <Tab.Screen
         name="Publicaciones"
-        component={PublicationScreen}
+        component={PublicationStack}
         initialParams={{ userNick, UserId }} 
         options={{
           tabBarIcon: ({ focused }) => (
@@ -97,8 +94,8 @@ const HomeScreen = ({route}) => {
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
               focused={focused}
-              activeIcon={require('../../assets/addg.png')}
-              inactiveIcon={require('../../assets/addgris.png')}
+              activeIcon={require('../../assets/PerfilGreen.png')}
+              inactiveIcon={require('../../assets/PerfilGris.png')}
               label="Perfil"
             />
           ),

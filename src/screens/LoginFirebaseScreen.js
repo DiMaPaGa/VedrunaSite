@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, TextInput, Text, TouchableOpacity, StyleSheet, Image, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth'; 
 import { auth } from '../firebaseConfig';
+import { API_HOST } from '@env';
 
 const LoginFirebaseScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -14,11 +15,9 @@ const LoginFirebaseScreen = ({ navigation }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log('Usuario autenticado detectado.');
         setUserId(user.uid);
       } else {
         setUserId('');
-        console.log('Usuario no autenticado');
       }
     });
 
@@ -34,20 +33,16 @@ const LoginFirebaseScreen = ({ navigation }) => {
   }, [userId]);
   const fetchUserData = async (userId) => {
     try {
-      const response = await fetch(`http://192.168.1.168:8080/proyecto01/users/${userId}`);
+      const response = await fetch(`${API_HOST}/proyecto01/users/${userId}`);
       const data = await response.json();
 
       if (data && data.nick) {
         setUserNick(data.nick);
-        console.log('✅ Nick del usuario:', data.nick);
   
         // Navegar solo cuando tengamos ambos valores correctos
         navigation.replace('Home', { userNick: data.nick, UserId: userId });
-      } else {
-        console.error('🚨 Usuario no encontrado o sin nick válido');
-      }
+      } 
     } catch (error) {
-      console.error('🚨 Error al obtener los datos del usuario:', error);
     }
   };
 
@@ -61,14 +56,12 @@ const LoginFirebaseScreen = ({ navigation }) => {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
-        console.log('✅ Login exitoso:', user);
   
         setUserId(user.uid);  // Guardamos el UserId
   
   
       })
       .catch((error) => {
-        console.error('🚨 Error de autenticación:', error.code, error.message);
         Alert.alert('Error de inicio de sesión', 'Correo o contraseña incorrectos.');
       })
       .finally(() => {

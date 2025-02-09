@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { API_HOST } from '@env';
 
 const AddPublicationScreen = ({ route }) => {
 
   const { userNick } = route.params || {};
-  console.log('userNick en PublicationScreen: ', userNick);
 
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
@@ -76,10 +76,8 @@ const AddPublicationScreen = ({ route }) => {
         body: formData,
       });
       const data = await response.json();
-      console.log('Respuesta de Cloudinary:', data);
       return data.secure_url;
     } catch (error) {
-      console.error('Error al subir la imagen:', error);
       throw new Error('Error al subir la imagen');
     }
   };
@@ -97,7 +95,6 @@ const AddPublicationScreen = ({ route }) => {
 
       if (selectedImage) {
         imageUrl = await uploadImageToCloudinary(selectedImage);
-        console.log('URL de la imagen:', imageUrl);
       }
 
       const publicationData = {
@@ -107,7 +104,7 @@ const AddPublicationScreen = ({ route }) => {
         image_url: imageUrl,
       };
 
-      const response = await fetch('http://192.168.1.168:8080/proyecto01/publicaciones', {
+      const response = await fetch(`${API_HOST}/proyecto01/publicaciones`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(publicationData),
@@ -122,7 +119,6 @@ const AddPublicationScreen = ({ route }) => {
         Alert.alert('Error', 'No se pudo crear la publicación.');
       }
     } catch (error) {
-      console.error('Error al crear la publicación:', error);
       Alert.alert('Error', 'Ocurrió un error al crear la publicación.');
     } finally {
       setIsLoading(false);
@@ -200,8 +196,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    backgroundColor: '#333',
-    color: '#FFFFFF',
+    backgroundColor: '#323639',
+    color: '#DFDFDF',
     borderRadius: 5,
     padding: 10,
     marginBottom: 15,
@@ -221,7 +217,7 @@ const styles = StyleSheet.create({
     width: '50%',
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#DFDFDF',
     fontSize: 14,
     fontWeight: 'bold',
   },
