@@ -1,22 +1,32 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, initializeAuth, getReactNativePersistence } from "firebase/auth";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { 
+  FIREBASE_API_KEY, 
+  FIREBASE_AUTH_DOMAIN, 
+  FIREBASE_PROJECT_ID, 
+  FIREBASE_STORAGE_BUCKET, 
+  FIREBASE_MESSAGING_SENDER_ID, 
+  FIREBASE_APP_ID 
+} from '@env';
+
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBZkXabwPgzk_tDuX-YmzQQ8C-tQKpeQYM",
-  authDomain: "vedrunasite-ff1bd.firebaseapp.com",
-  projectId: "vedrunasite-ff1bd",
-  storageBucket: "vedrunasite-ff1bd.firebasestorage.app",
-  messagingSenderId: "1029790457556",
-  appId: "1:1029790457556:web:f680c5896bdad917a2a541"
+  apiKey: FIREBASE_API_KEY,
+  authDomain: FIREBASE_AUTH_DOMAIN,
+  projectId: FIREBASE_PROJECT_ID,
+  storageBucket: FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+  appId: FIREBASE_APP_ID
 };
 
-
+// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
 
-
+// Inicializa Firebase Auth con persistencia
 const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage), 
 });
 
 export { auth };
+

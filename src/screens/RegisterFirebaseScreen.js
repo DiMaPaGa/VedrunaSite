@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebaseConfig'; 
+import { API_HOST } from '@env';
 
 const RegisterFirebaseScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -74,7 +75,7 @@ const RegisterFirebaseScreen = ({ navigation }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log('Usuario registrado: ', user);
+      
 
       
       const usuarioData = {
@@ -86,7 +87,7 @@ const RegisterFirebaseScreen = ({ navigation }) => {
       };
 
        
-       const response = await fetch('http://192.168.1.168:8080/proyecto01/users', {
+       const response = await fetch(`${API_HOST}/proyecto01/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,12 +97,11 @@ const RegisterFirebaseScreen = ({ navigation }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Usuario guardado en MongoDB:', data);
+        
         navigation.navigate('LoginFirebaseScreen');  
       } else {
         const errorData = await response.json();
-        console.error('Error al guardar usuario:', errorData);
-        Alert.alert('Error', 'Hubo un problema al guardar los datos del usuario.');
+        Alert.alert('Hubo un problema al guardar los datos del usuario:', errorData.error);
       }
     } catch (error) {
       const errorCode = error.code;
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     color: '#9FC63B',
     marginTop: 20,
     marginBottom: 30,
-    fontFamily: 'Asap Condensed',
+    fontFamily: 'AsapCondensed-Regular',
     textAlign: 'left',
   },
   inputGroup: {
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     color: '#DFDFDF',
     fontSize: 18,
     fontWeight: '700',
-    fontFamily: 'Asap Condensed',
+    fontFamily: 'AsapCondensed-Regular',
   },
 });
 

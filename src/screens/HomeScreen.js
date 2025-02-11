@@ -1,9 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image, Text, View, StyleSheet } from 'react-native';
-import PublicationScreen from './PublicationScreen';
-import SettingsScreen from './SettingsScreen';
+import PublicationStack from './navigation/PublicationdStack';
+import TicketsScreen from './TicketsScreen';
 import AddPublicationScreen from './AddPublicationScreen';
+import ProfileScreen from './ProfileScreen';
+import SinglePublicationScreen from './SinglePublicationScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -24,7 +26,8 @@ const CustomTabBarIcon = ({ focused, activeIcon, inactiveIcon, label }) => (
 );
 
 const HomeScreen = ({route}) => {
-  const { userNick, UserId } = route.params;
+  const { userNick, UserId } = route.params || {};
+
 
   return(
     <Tab.Navigator
@@ -36,8 +39,8 @@ const HomeScreen = ({route}) => {
     >
       <Tab.Screen
         name="Publicaciones"
-        component={PublicationScreen}
-        initialParams={{ userNick }} 
+        component={PublicationStack}
+        initialParams={{ userNick, UserId }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
@@ -53,7 +56,7 @@ const HomeScreen = ({route}) => {
       <Tab.Screen
         name="Add"
         component={AddPublicationScreen}
-        initialParams={{ userNick }} 
+        initialParams={{ userNick, UserId }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
@@ -68,7 +71,8 @@ const HomeScreen = ({route}) => {
 
       <Tab.Screen
         name="Ajustes"
-        component={SettingsScreen}
+        component={TicketsScreen}
+        initialParams={{ userNick, UserId }} 
         options={{
           tabBarIcon: ({ focused }) => (
             <CustomTabBarIcon
@@ -76,6 +80,23 @@ const HomeScreen = ({route}) => {
               activeIcon={require('../../assets/ajustes.png')}
               inactiveIcon={require('../../assets/ajustesgris.png')}
               label="Ajustes"
+            />
+          ),
+        }}
+      />
+
+      {/* Nueva pestaña de Perfil */}
+      <Tab.Screen
+        name="Perfil"
+        component={ProfileScreen}
+        initialParams={{ userNick, UserId }} 
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <CustomTabBarIcon
+              focused={focused}
+              activeIcon={require('../../assets/PerfilGreen.png')}
+              inactiveIcon={require('../../assets/PerfilGris.png')}
+              label="Perfil"
             />
           ),
         }}
@@ -107,7 +128,7 @@ const styles = StyleSheet.create({
     marginBottom: 2, 
   },
   iconLabel: {
-    fontFamily: 'Asap Condensed',
+    fontFamily: 'AsapCondensed-Regular',
     fontStyle: 'normal',
     fontWeight: '400',
     fontSize: 11,

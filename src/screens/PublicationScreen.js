@@ -9,22 +9,29 @@ import {
   RefreshControl,
   Dimensions,
   Animated,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { API_HOST } from '@env';
 
-const API_URL = "http://192.168.1.168:8080/proyecto01/publicaciones";
-const USER_API_URL = "http://192.168.1.168:8080/proyecto01/users/name";
+
+const API_URL = `${API_HOST}/proyecto01/publicaciones`;
+const USER_API_URL = `${API_HOST}/proyecto01/users/name`;                              
 
 const { width } = Dimensions.get("window");
 
 const PublicationScreen = ({route}) => {
 
   const { userNick } = route.params || {};
-  console.log('userNick en PublicationScreen: ', userNick);
+  
+
+  const navigation = useNavigation(); 
   
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [likes, setLikes] = useState({});
   const scrollY = new Animated.Value(0);
 
   const fetchPublicaciones = async () => {
@@ -36,7 +43,7 @@ const PublicationScreen = ({route}) => {
       }
       const publicacionesData = await response.json();
 
-      // Obtener datos de los usuarios
+      
       const publicacionesConUsuarios = await Promise.all(
         publicacionesData.map(async (publicacion) => {
           const userResponse = await fetch(`${USER_API_URL}?id=${publicacion.user_id}`);
@@ -48,18 +55,20 @@ const PublicationScreen = ({route}) => {
           return {
             ...publicacion,
             user_id: publicacion.user_id,
+            like: publicacion.like || [],
+            comentarios: publicacion.comentarios || [],
           };
         })
       );
 
       setPublicaciones(publicacionesConUsuarios);
     } catch (error) {
-      console.error("Error:", error);
+      
     } finally {
       setLoading(false);
     }
   };
-
+  
   useEffect(() => {
     fetchPublicaciones();
   }, []);
@@ -70,13 +79,54 @@ const PublicationScreen = ({route}) => {
     setRefreshing(false);
   };
 
+  const toggleLike = async (publicacionId) => {
+    const userId = userNick; 
+    const updatedPublicaciones = [...publicaciones];
+
+    const pubIndex = updatedPublicaciones.findIndex((pub) => pub.id === publicacionId);
+    const pub = updatedPublicaciones[pubIndex];
+
+    if (pub.like.includes(userId)) {
+      // El usuario ya ha dado "Me gusta", lo quitamos
+      pub.like = pub.like.filter((like) => like !== userId);
+    } else {
+      // El usuario no ha dado "Me gusta", lo agregamos
+      pub.like.push(userId);
+    }
+
+    // Actualizamos el estado de la publicación
+    setLikes({
+      ...likes,
+      [publicacionId]: pub.like.length,
+    });
+
+    // Actualizamos la publicación en el backend
+    await fetch(`${API_HOST}/proyecto01/publicaciones/put/${publicacionId}/${userId}`, {
+      method: 'PUT',
+    });
+  };
+
   const renderItem = ({ item }) => {
     const daysAgo = Math.floor(
       (new Date() - new Date(item.createdAt)) / (1000 * 60 * 60 * 24)
     );
 
+    // Obtener el número de likes para cada publicación
+    const likesCount = likes[item.id] || item.like.length;
+    const commentsCount = item.comentarios ? item.comentarios.length : 0;
+
     return (
+    
+      <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("SinglePublication", {
+          publicacion: item,
+          userNick,
+        })
+      }
+    >
       <View style={styles.card}>
+        {/* ...Header y otros componentes*/}
         <View style={styles.headerUserContainer}>
           <Image source={require("../../assets/iconUser.png")} style={styles.avatar} />
           <View style={styles.userTextContainer}>
@@ -85,14 +135,29 @@ const PublicationScreen = ({route}) => {
             <Text style={styles.timeAgo}>Hace {daysAgo} días</Text>
           </View>
         </View>
-
         {/* Imagen principal */}
         <Image source={{ uri: item.image_url }} style={styles.image} />
-
+    
+        {/* Recuento de Me gusta */}
+        <View style={styles.likesContainer}>
+          <TouchableOpacity onPress={() => toggleLike(item.id)} style={styles.likeButton}>
+            <Image
+              source={item.like.includes(userNick) ? require("../../assets/Favorite.png") : require("../../assets/FavoriteBorder.png")}
+              style={styles.likeIcon}
+            />
+          </TouchableOpacity>
+          <Text style={styles.likesCount}>{likesCount} Me gusta</Text>
+        </View>
+    
         {/* Título y descripción */}
         <Text style={styles.title}>{item.titulo}</Text>
         <Text style={styles.comment}>{item.comentario}</Text>
+    
+        {/* Recuento de comentarios */}
+        <Text style={styles.commentsCount}>{commentsCount} comentarios</Text>
       </View>
+    </TouchableOpacity>
+    
     );
   };
 
@@ -107,7 +172,7 @@ const PublicationScreen = ({route}) => {
         {
           translateY: scrollY.interpolate({
             inputRange: [0, 100],
-            outputRange: [0, -120], // Desaparece al hacer scroll
+            outputRange: [0, -120],
             extrapolate: "clamp",
           }),
         },
@@ -115,7 +180,7 @@ const PublicationScreen = ({route}) => {
     },
   ]}
 >
-  {/* Contenedor completo para alinear todo */}
+  {/* Contenedor completo para alinear */}
   <View style={styles.headerContent}>
     
     <View style={styles.logoContainer}>
@@ -197,7 +262,7 @@ const styles = StyleSheet.create({
     alignItems: "left",
   },
   nick: {
-    fontFamily: "Asap Condensed",
+    fontFamily: "AsapCondensed-Regular",
     fontSize: 13,
     color: "#FFFFFF",
     marginBottom: 2,
@@ -248,18 +313,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   publishedBy: {
-    fontFamily: "Asap Condensed",
+    fontFamily: "AsapCondensed-Regular",
     fontSize: 15,
     color: "#DFDFDF",
   },
   user_id: {
-    fontFamily: "Asap Condensed",
+    fontFamily: "AsapCondensed-Regular",
     fontSize: 20,
     fontWeight: "700",
     color: "#DFDFDF",
   },
   timeAgo: {
-    fontFamily: "Asap Condensed",
+    fontFamily: "AsapCondensed-Regular",
     fontSize: 11,
     color: "#868686",
   },
@@ -268,20 +333,42 @@ const styles = StyleSheet.create({
     height: "73.54%",
   },
   title: {
-    fontFamily: "Asap Condensed",
+    fontFamily: "AsapCondensed-Regular",
     fontSize: 24,
     fontWeight: "700",
     color: "#9FC63B",
     marginHorizontal: 15,
     marginTop: 10,
+    textTransform: "uppercase", 
+  },
+  likesContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    marginLeft: 15, 
+  },
+  likeIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 5,
+  },
+  likesCount: {
+    fontSize: 14,
+    color: "gray",
   },
   comment: {
-    fontFamily: "Asap Condensed",
-    fontSize: 13,
-    color: "#FFFFFF",
-    marginHorizontal: 15,
-    marginTop: 5,
-    textTransform: "capitalize",
+    fontSize: 14,
+    textTransform: 'capitalize',
+    marginVertical: 5,
+    color: "gray",
+    marginLeft: 15, 
+  },
+  commentsCount: {
+    fontFamily: "AsapCondensed-Regular",
+    fontSize: 11,
+    color: "#868686",
+    fontWeight: "normal",
+    marginLeft: 15, 
   },
 });
 
